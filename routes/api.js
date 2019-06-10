@@ -5,10 +5,10 @@ const unirest = require("unirest");
 const SearchHistory = require('../models/searchHistory');
 
 router.get("/search/:term", (req, res, next) => {
-    const offset = req.query.offset ? req.query.offset : 1;
+    const offset = req.query.activePage ? req.query.activePage : 1;
     const term = req.params.term;
     const apiString = "https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/ImageSearchAPI";
-    console.log('requesting term ' + term + ' with offset ' + offset);
+    console.log('requesting term ' + term + ' with activePage ' + offset);
     // Create a new SearchHistory document
     const search = new SearchHistory({
         search_term: term,

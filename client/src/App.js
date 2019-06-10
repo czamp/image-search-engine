@@ -6,31 +6,51 @@ import {
   Card,
   Container,
   Header,
+  Pagination,
   Image
 } from "semantic-ui-react";
 import axios from "axios";
-import querystring from 'querystring';
 
 class App extends Component {
   state = {
+    activePage: 1,
     isFetching: false,
+    resultsReturned: false,
     searchResults: [],
     searchTerm: "",
-    offset: 1
   };
 
+  // Search input handler
   handleChange = (e, { name, value }) => {
-    this.setState({ [name]: value });
+    this.setState({ [name]: value});
   };
 
+  // Paginate search results
+  handleOffsetChange = (e, { activePage }) => {
+    this.setState({ activePage }, ()=> this.handleSubmit());
+  };
+
+  // Search for new term or next page of results
   handleSubmit = () => {
+    // Set active page to 1 if new search term is entered
+    if (this.state.searchTerm !== this.state.lastSearch) {
+      this.setState({activePage: 1})
+    }
+
+    // Set component state for fresh search results
     this.setState({ isFetching: true, searchResults: [] });
+
+    // query the search API
     axios
-      .get("/api/search/" + this.state.searchTerm + '?offset=' + this.state.offset)
+      .get(
+        "/api/search/" + this.state.searchTerm + "?activePage=" + this.state.activePage
+      )
       .then(res =>
         this.setState({
           isFetching: false,
-          searchResults: res.data
+          searchResults: res.data,
+          lastSearch: this.state.searchTerm,
+          resultsReturned: true
         })
       )
       .catch(err => console.log(err));
@@ -65,14 +85,36 @@ class App extends Component {
           </Segment>
           <Loader active={this.state.isFetching} />
           <Segment vertical>
-            <Card.Group>
-              {this.state.searchResults.length > 0 &&
-                this.state.searchResults.map(result => (
-                  <Card key={result.alt}>
-                    <Image src={result.url} wrapped alt={result.alt} />
-                  </Card>
-                ))}
-            </Card.Group>
+            {this.state.searchResults.length > 0 && (
+              <React.Fragment>
+                <Card.Group>
+                  {this.state.searchResults.map(result => (
+                    <Card key={result.alt}>
+                      <Image
+                        src={result.url}
+                        wrapped
+                        alt={result.alt}
+                        as="a"
+                        href={result.url}
+                        target={"blank"}
+                        rel="noopener noreferrer"
+                      />
+                    </Card>
+                  ))}
+                </Card.Group>
+              </React.Fragment>
+            )}
+            {this.state.resultsReturned &&
+              <Segment vertical>
+                <Header size={"mini"}>More Results</Header>
+
+            <Pagination
+              activePage={this.state.activePage}
+              totalPages={10}
+              onPageChange={this.handleOffsetChange}
+            />
+              </Segment>
+            }
           </Segment>
         </Container>
       </div>
