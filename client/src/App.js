@@ -5,6 +5,7 @@ import {
   Form,
   Card,
   Container,
+  Checkbox,
   Header,
   Pagination,
   Image
@@ -16,25 +17,32 @@ class App extends Component {
     activePage: 1,
     isFetching: false,
     resultsReturned: false,
+    safeSearch: false,
     searchResults: [],
-    searchTerm: "",
+    searchTerm: ""
   };
 
   // Search input handler
   handleChange = (e, { name, value }) => {
-    this.setState({ [name]: value});
+    this.setState({ [name]: value });
   };
 
   // Paginate search results
   handleOffsetChange = (e, { activePage }) => {
-    this.setState({ activePage }, ()=> this.handleSubmit());
+    this.setState({ activePage }, () => this.handleSubmit());
   };
+
+  toggle = () => {
+    this.setState({
+      safeSearch: !this.state.safeSearch
+    })
+  }
 
   // Search for new term or next page of results
   handleSubmit = () => {
     // Set active page to 1 if new search term is entered
     if (this.state.searchTerm !== this.state.lastSearch) {
-      this.setState({activePage: 1})
+      this.setState({ activePage: 1 });
     }
 
     // Set component state for fresh search results
@@ -43,7 +51,12 @@ class App extends Component {
     // query the search API
     axios
       .get(
-        "/api/search/" + this.state.searchTerm + "?activePage=" + this.state.activePage
+        "/api/search/" +
+          this.state.searchTerm +
+          "?activePage=" +
+          this.state.activePage +
+          "&safeSearch=" +
+          this.state.safeSearch
       )
       .then(res =>
         this.setState({
@@ -71,7 +84,7 @@ class App extends Component {
           </Header>
           <Segment vertical>
             <Form onSubmit={this.handleSubmit}>
-              <Form.Field width={16}>
+              <Form.Field width={16} >
                 <Form.Input
                   fluid
                   width={16}
@@ -81,16 +94,32 @@ class App extends Component {
                   name="searchTerm"
                 />
               </Form.Field>
+              <Form.Group inline>
+                <Checkbox checked={this.state.safeSearch} onChange={this.toggle} label={"Use SafeSearch"}/>
+                <Form.Button primary onClick={this.handleSubmit}>Search</Form.Button>
+              </Form.Group>
             </Form>
           </Segment>
+          {this.state.resultsReturned && (
+            <Segment vertical>
+              {/*<Header size={"mini"}>More Results</Header>*/}
+
+              <Pagination
+                activePage={this.state.activePage}
+                totalPages={10}
+                onPageChange={this.handleOffsetChange}
+              />
+            </Segment>
+          )}
           <Loader active={this.state.isFetching} />
           <Segment vertical>
             {this.state.searchResults.length > 0 && (
               <React.Fragment>
-                <Card.Group>
+                <Image.Group size="medium">
                   {this.state.searchResults.map(result => (
-                    <Card key={result.alt}>
+
                       <Image
+                        key={result.url}
                         src={result.url}
                         wrapped
                         alt={result.alt}
@@ -99,22 +128,11 @@ class App extends Component {
                         target={"blank"}
                         rel="noopener noreferrer"
                       />
-                    </Card>
+
                   ))}
-                </Card.Group>
+                </Image.Group>
               </React.Fragment>
             )}
-            {this.state.resultsReturned &&
-              <Segment vertical>
-                <Header size={"mini"}>More Results</Header>
-
-            <Pagination
-              activePage={this.state.activePage}
-              totalPages={10}
-              onPageChange={this.handleOffsetChange}
-            />
-              </Segment>
-            }
           </Segment>
         </Container>
       </div>

@@ -8,6 +8,7 @@ router.get("/search/:term", (req, res, next) => {
     const offset = req.query.activePage ? req.query.activePage : 1;
     const term = req.params.term;
     const apiString = "https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/ImageSearchAPI";
+    const safeSearch = req.query.safeSearch || false;
     console.log('requesting term ' + term + ' with activePage ' + offset);
     // Create a new SearchHistory document
     const search = new SearchHistory({
@@ -25,7 +26,7 @@ router.get("/search/:term", (req, res, next) => {
     });
 
     unirest
-        .get(apiString + "?autoCorrect=false&pageNumber=" + offset + "&pageSize=10&q=" + term + "&safeSearch=false")
+        .get(apiString + "?autoCorrect=false&pageNumber=" + offset + "&pageSize=20&q=" + term + "&safeSearch=" + safeSearch)
         .header("X-RapidAPI-Host", process.env.API_HOST)
         .header("X-RapidAPI-Key", process.env.API_KEY)
         .end(result => {
