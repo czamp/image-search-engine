@@ -8,7 +8,10 @@ var helmet = require('helmet');
 require('dotenv').config();
 var mongoose = require('mongoose');
 
-mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true})
+mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true}, (err) => {
+    if (err) console.log('Database error');
+    else console.log('Connected to database.');
+});
 
 var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
