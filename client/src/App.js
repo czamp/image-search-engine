@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Checkbox, Container, Form, Header, Image, List, Loader, Message, Pagination, Segment } from "semantic-ui-react";
+import SearchResult from './components/SearchResult';
 import axios from "axios";
 
 class App extends Component {
@@ -76,6 +77,7 @@ class App extends Component {
         })
       )
       .catch(err => console.log(err));
+    this.getSearchHistory()
   };
 
   // Paginate search results
@@ -178,16 +180,11 @@ class App extends Component {
               <React.Fragment>
                 <Image.Group size="small">
                   {this.state.searchResults.map(result => (
-                    <Image
+                    <SearchResult
                       alt={result.alt}
-                      as="a"
-                      bordered
-                      href={result.url}
-                      key={result.url}
-                      rel="noopener noreferrer"
-                      src={result.thumbnail}
-                      target={"blank"}
-                      wrapped
+                      image={result.image}
+                      thumbnail={result.thumbnail}
+                      url={result.url}
                     />
                   ))}
                 </Image.Group>
@@ -212,3 +209,15 @@ class App extends Component {
 }
 
 export default App;
+
+{/*<Image*/}
+{/*  alt={result.alt}*/}
+{/*  as="a"*/}
+{/*  bordered*/}
+{/*  href={result.url}*/}
+{/*  key={result.url}*/}
+{/*  rel="noopener noreferrer"*/}
+{/*  src={result.thumbnail}*/}
+{/*  target={"blank"}*/}
+{/*  wrapped*/}
+{/*/>*/}

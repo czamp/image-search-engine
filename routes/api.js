@@ -23,18 +23,30 @@ router.get("/search/:term", (req, res, next) => {
 
 
   // Create document for SearchHistory model
-  const search = new SearchHistory({
-    search_term: term,
-    searched_on: new Date()
-  });
-  // Save the SearchHistory to the database
-  search.save((err, doc) => {
-    if (err) {
-      console.log(err);
-    } else {
-      return;
+  // const search = new SearchHistory({
+  //   search_term: term,
+  //   searched_on: new Date()
+  // });
+
+  SearchHistory.findOneAndUpdate({search_term: term},{searched_on: new Date()}, (err, doc) => {
+    if (!err) {
+      if (!doc) {
+        doc = new SearchHistory({search_term: term, searched_on: new Date()})
+      }
+      doc.save(err => {
+        if(err) {console.log(err)}
+      })
     }
-  });
+  })
+
+  // Save the SearchHistory to the database
+  // search.save((err, doc) => {
+  //   if (err) {
+  //     console.log(err);
+  //   } else {
+  //     return;
+  //   }
+  // });
 
   unirest
     .get("https://" + host + path + "?q=" + term + "&count=" + count + "&offset=" + offset + "&safeSearch=" + safeSearch)
@@ -44,8 +56,9 @@ router.get("/search/:term", (req, res, next) => {
       let searchResults = result.body.value.map((image, i) => {
         return {
           url: image.hostPageUrl,
-          thumbnail: image.contentUrl,
+          image: image.contentUrl,
           alt: image.name,
+          thumbnail: image.thumbnailUrl,
           thumbnailHeight: image.thumbnail.height,
           thumbnailWidth: image.thumbnail.width
         };
@@ -57,10 +70,10 @@ router.get("/search/:term", (req, res, next) => {
 });
 
 router.get("/history", (req, res, next) => {
-  SearchHistory.find({}, (err, docs) => {
-    if (err) console.log(err);
-    res.json(docs);
-  });
+ SearchHistory.find({}).sort("searched_on").exec((err, docs) => {
+   if(err) console.log(err);
+   res.json(docs);
+ })
 });
 
 module.exports = router;
