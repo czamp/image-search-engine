@@ -4,6 +4,7 @@ const router = express.Router();
 const unirest = require("unirest");
 const request = require("request");
 const SearchHistory = require("../models/searchHistory");
+const SearchSuggestions = require('../models/searchSuggestions');
 
 router.get("/search/:term", (req, res, next) => {
     // API call parameters
@@ -21,12 +22,18 @@ router.get("/search/:term", (req, res, next) => {
   console.log('safeSearch:' + safeSearch);
   console.log('offset: ' + offset);
 
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-  // Create document for SearchHistory model
-  // const search = new SearchHistory({
-  //   search_term: term,
-  //   searched_on: new Date()
-  // });
+  SearchSuggestions.findOneAndUpdate({user: ip.toString() }, {$push:{userSearches: term}}, (err, doc) => {
+    if (!err) {
+      if (!doc) {
+        doc = new SearchSuggestions({user: ip,userSearches: term})
+      }
+      doc.save(err => {
+        if(err) { console.log(err)};
+      })
+    }
+  });
 
   SearchHistory.findOneAndUpdate({search_term: term},{searched_on: new Date()}, (err, doc) => {
     if (!err) {

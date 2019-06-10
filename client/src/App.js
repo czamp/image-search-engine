@@ -14,6 +14,7 @@ class App extends Component {
     resultsReturned: false,
     safeSearch: false,
     searchResults: [],
+    suggestedSearches: '',
     searchTerm: ""
   };
 
