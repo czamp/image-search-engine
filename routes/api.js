@@ -15,6 +15,13 @@ router.get("/search/:term", (req, res, next) => {
   let count = 20;
   let offset = req.query.offset * count - count;
 
+  // ensures that if a query does not contain the optional params, the search will still return results
+  if (safeSearch === undefined) { safeSearch = 'off'};
+  if (isNaN(offset)) { offset = 0};
+  console.log('safeSearch:' + safeSearch);
+  console.log('offset: ' + offset);
+
+
   // Create document for SearchHistory model
   const search = new SearchHistory({
     search_term: term,
