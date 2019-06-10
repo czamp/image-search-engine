@@ -4,6 +4,7 @@ const router = express.Router();
 const unirest = require("unirest");
 const request = require("request");
 const SearchHistory = require("../models/searchHistory");
+const SearchSuggestions = require('../models/searchSuggestions');
 
 router.get("/search/:term", (req, res, next) => {
     // API call parameters
@@ -15,19 +16,44 @@ router.get("/search/:term", (req, res, next) => {
   let count = 20;
   let offset = req.query.offset * count - count;
 
-  // Create document for SearchHistory model
-  const search = new SearchHistory({
-    search_term: term,
-    searched_on: new Date()
-  });
-  // Save the SearchHistory to the database
-  search.save((err, doc) => {
-    if (err) {
-      console.log(err);
-    } else {
-      return;
+  // ensures that if a query does not contain the optional params, the search will still return results
+  if (safeSearch === undefined) { safeSearch = 'off'};
+  if (isNaN(offset)) { offset = 0};
+  console.log('safeSearch:' + safeSearch);
+  console.log('offset: ' + offset);
+
+  var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  SearchSuggestions.findOneAndUpdate({user: ip.toString() }, {$push:{userSearches: term}}, (err, doc) => {
+    if (!err) {
+      if (!doc) {
+        doc = new SearchSuggestions({user: ip,userSearches: term})
+      }
+      doc.save(err => {
+        if(err) { console.log(err)};
+      })
     }
   });
+
+  SearchHistory.findOneAndUpdate({search_term: term},{searched_on: new Date()}, (err, doc) => {
+    if (!err) {
+      if (!doc) {
+        doc = new SearchHistory({search_term: term, searched_on: new Date()})
+      }
+      doc.save(err => {
+        if(err) {console.log(err)}
+      })
+    }
+  })
+
+  // Save the SearchHistory to the database
+  // search.save((err, doc) => {
+  //   if (err) {
+  //     console.log(err);
+  //   } else {
+  //     return;
+  //   }
+  // });
 
   unirest
     .get("https://" + host + path + "?q=" + term + "&count=" + count + "&offset=" + offset + "&safeSearch=" + safeSearch)
@@ -37,8 +63,9 @@ router.get("/search/:term", (req, res, next) => {
       let searchResults = result.body.value.map((image, i) => {
         return {
           url: image.hostPageUrl,
-          thumbnail: image.contentUrl,
+          image: image.contentUrl,
           alt: image.name,
+          thumbnail: image.thumbnailUrl,
           thumbnailHeight: image.thumbnail.height,
           thumbnailWidth: image.thumbnail.width
         };
@@ -50,10 +77,10 @@ router.get("/search/:term", (req, res, next) => {
 });
 
 router.get("/history", (req, res, next) => {
-  SearchHistory.find({}, (err, docs) => {
-    if (err) console.log(err);
-    res.json(docs);
-  });
+ SearchHistory.find({}).sort("searched_on").exec((err, docs) => {
+   if(err) console.log(err);
+   res.json(docs);
+ })
 });
 
 module.exports = router;
