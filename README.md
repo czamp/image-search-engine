@@ -3,6 +3,8 @@ An abstraction layer for Bing image search
 
 Created for the FreeCodeCamp project "Build an Image Search Abstraction Layer"
 
+**NOTE:** The Bing API key used in the linked example is no longer active, so the demo will not return images.
+
 ## API Endpoints
 
 There are two API endpoints:
